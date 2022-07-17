@@ -3,14 +3,37 @@
 // Check out https://vuejs.org/api/sfc-script-setup.html#script-setup
 import HelloWorld from './components/HelloWorld.vue'
 import Vue2Verify from "./components/verity/Verity.vue"
+import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 const input = ref("")
 const show = ref(false)
+const loading = ref(false)
+const disabled = ref(false)
 function submit () {
   show.value = true
+  disabled.value = true
 }
-function success() {
+function success(data) {
+  loading.value = false
+  disabled.value = false
   show.value = false
+  ElMessage({
+    message: data.msg,
+    type: 'success',
+  })
+}
+function fail (data) {
+  show.value = false
+  loading.value = false
+  disabled.value = false
+  ElMessage({
+    message: data.msg,
+    type: 'error',
+  })
+}
+
+function closeDialog (){
+  disabled.value = false
 }
 
 </script>
@@ -18,21 +41,23 @@ function success() {
 <template>
     <div class="container">
       <div class="content">
-          <h2>Enter your Polygon address below.</h2>
-          <div class="desc"> We will send you a small dose of potassium.</div>
-         <el-input v-model="input" size="large" placeholder="Please input your polygon address" />
-         <el-button style="marginTop: 30px" type="primary" @click="submit" size="large" round>Send Me Some BigDogCoin</el-button>
+          <h2>请在下面输入你Polygon的地址.</h2>
+          <div class="desc">我们将给您发送一些BigDogCoin币.</div>
+         <el-input v-model="input" size="large" placeholder="请输入你的polygon地址" />
+         <el-button style="marginTop: 30px" :loading="loading" type="primary" :disabled="disabled" @click="submit" size="large" round>获取BigDogCoin币</el-button>
       </div>
-      <div v-show="show">
+      <el-dialog v-model="show" title="请完成验证码" center width="400px" @close="closeDialog">
         <Vue2Verify
-        :mode="'fixed'"
-        :captcha-type="'blockPuzzle'"
-        :captcha-id="'9ca07a9c-c260-50ae-2c13-89cde2f34cb9'"
-        :container-id="'#sliderFixed_btn'"
-        :img-size="{ width: '330px', height: '155px' }"
-        :success-event="success"
-          />
-      </div>
+          :mode="'fixed'"
+          :captcha-type="'blockPuzzle'"
+          :captcha-id="'9ca07a9c-c260-50ae-2c13-89cde2f34cb9'"
+          :container-id="'#sliderFixed_btn'"
+          :img-size="{ width: '330px', height: '155px' }"
+          :success-event="success"
+          :fail-event="fail"
+          :address-value="input"
+            />
+      </el-dialog>
     </div> 
 </template>
 
@@ -67,5 +92,8 @@ function success() {
 .content .desc {
   font-size: 18px;
   margin: 30px auto;
+}
+.container .captcha {
+  margin: auto;
 }
 </style>

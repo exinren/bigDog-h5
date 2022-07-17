@@ -1,6 +1,6 @@
 <template>
-  <div v-show="showBox" :class="mode=='pop'?'mask':''">
-    <div :class="mode=='pop'?'verifybox':''" :style="{'max-width':parseInt(imgSize.width)+30+'px'}">
+  <div v-show="showBox" :class="mode=='pop'?'mask':''" >
+    <div :class="mode=='pop'?'verifybox':'auto'" :style="{'max-width':parseInt(imgSize.width)+30+'px'}">
       <div v-if="mode=='pop'" class="verifybox-top">
         请完成安全验证
         <span class="verifybox-close" @click="closeBox">
@@ -25,6 +25,8 @@
           :bar-size="barSize"
           :default-img="defaultImg"
           :success-event="successEvent"
+          :fail-event="failEvent"
+          :address-value="addressValue"
         />
       </div>
     </div>
@@ -95,7 +97,13 @@ export default {
     barSize: {
       type: Object
     },
+    addressValue: {
+      type: String
+    },
     successEvent: {
+      type: Function
+    },
+    failEvent: {
       type: Function
     }
   },
@@ -199,6 +207,9 @@ export default {
         left: 50%;
         top:50%;
         transform: translate(-50%,-50%);
+    }
+    .auto {
+      margin: 20px auto;
     }
     .verifybox-top{
         padding: 0 15px;

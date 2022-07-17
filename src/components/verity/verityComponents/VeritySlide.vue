@@ -9,9 +9,11 @@
         class="verify-img-panel"
         :style="{width: setSize.imgWidth,
                  height: setSize.imgHeight,}"
+        v-loading="loading"
+        element-loading-text="加载中..."
       >
-        <img :src="backImgBase? backImgBase : defaultImg" alt="" style="width:100%;height:100%;display:block" >
-        <div v-show="showRefresh" class="verify-refresh" @click="refresh"><i class="iconfont icon-refresh" />
+        <img  :src="backImgBase? backImgBase : defaultImg" alt="" style="width:100%;height:100%;display:block" >
+        <div v-show="showRefresh" class="verify-refresh" @click="refresh"><el-icon :size="25" color="#fff" ><Refresh /></el-icon>
         </div>
         <transition name="tips">
           <span v-if="tipWords" class="verify-tips" :class="passFlag ?'suc-bg':'err-bg'">{{ tipWords }}</span>
@@ -50,7 +52,7 @@
                      'background-size': setSize.imgWidth + ' ' + setSize.imgHeight,
             }"
           >
-            <img :src="blockBackImgBase" alt="" style="width:100%;height:100%;display:block">
+            <img :src="blockBackImgBase" v-show="blockBackImgBase == '' ? false : true" alt="" style="width:100%;height:100%;display:block">
           </div>
         </div>
       </div>
@@ -121,7 +123,13 @@ export default {
       type: String,
       default: ''
     },
+    addressValue: {
+      type: String
+    },
     successEvent: {
+      type: Function
+    },
+    failEvent: {
       type: Function
     }
   },
@@ -157,7 +165,8 @@ export default {
       isEnd: false,		// 是够验证完成
       showRefresh: true,
       transitionLeft: '',
-      transitionWidth: ''
+      transitionWidth: '',
+      loading: true,
     }
   },
   computed: {
@@ -286,7 +295,7 @@ export default {
           // captchaType: this.captchaType,
           'left': parseInt(moveLeftDistance),
           'id': this.backToken,
-          'address': '0x51a08D9797Ad0c58b205bff0AEB127eedF75b5D1'
+          'address': this.addressValue
         }
         this.$axios({
           headers: {
@@ -307,7 +316,8 @@ export default {
             this.iconClass = 'icon-check'
             this.showRefresh = false
             this.isEnd = true
-            this.successEvent()
+            this.successEvent(data)
+            // console.log("成功了")
             if (this.mode == 'pop') {
               setTimeout(() => {
                 this.$parent.clickShow = false
@@ -328,15 +338,31 @@ export default {
             this.iconColor = '#fff'
             this.iconClass = 'icon-close'
             this.passFlag = false
+            this.failEvent(data)
             setTimeout(function() {
               _this.refresh()
             }, 1000)
-            this.$parent.$emit('error', this)
-            this.tipWords = '验证失败'
+            // this.$parent.$emit('error', this)
+            // this.tipWords = '验证失败'
             setTimeout(() => {
               this.tipWords = ''
             }, 1000)
           }
+        }).catch(err => {
+          const {data = {}} = err.response;
+          this.moveBlockBackgroundColor = '#d9534f'
+          this.leftBarBorderColor = '#d9534f'
+          this.iconColor = '#fff'
+          this.iconClass = 'icon-close'
+          this.passFlag = false
+          setTimeout(function() {
+            _this.refresh()
+          }, 1000)
+          this.$parent.$emit('error', this)
+          this.tipWords = '验证失败'
+          setTimeout(() => {
+            this.tipWords = ''
+          }, 1000)
         })
         this.status = false
       }
@@ -368,11 +394,7 @@ export default {
 
     // 请求背景图片和验证图片
     getPictrue() {
-      // const data = {
-      //   captchaType: this.captchaType,
-      //   clientUid: localStorage.getItem('slider'),
-      //   ts: Date.now(), // 现在的时间戳
-      // }
+      this.loading = true
       this.$axios({
         method: 'get',
         url: '/api/captcha'
@@ -392,6 +414,7 @@ export default {
             type: 'warning'
           })
         }
+        this.loading = false
       })
     },
   },
